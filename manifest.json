@@ -1,0 +1,36 @@
+{
+  "manifest_version": 2,
+
+  "name": "Vocab++",
+  "description": "This extension helps in increasing your vacabulary",
+  "version": "0.1",
+
+  "browser_action": {
+    "default_popup": "popup.html"
+  },
+  "icons": {
+  "16": "logo16.png",
+  "48": "logo48.png",
+  "128": "logo128.png" }
+  ,
+  "content_scripts": [
+    {
+    "matches": [
+         "http://*/*",
+        "https://*/*"
+    ],
+    "css": ["vex.css", "vex-theme-wireframe.css"],
+    "js": ["vex.combined.min.js", "content.js"]
+    }
+  ],
+  "permissions": [
+    "tabs",
+    "contextMenus",
+    "storage",
+    "http://*//*",
+    "https://*//*" 
+  ],
+  "background": {
+    "scripts": ["jquery-3.2.1.min.js","script.js"]
+  }
+}
