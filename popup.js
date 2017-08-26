@@ -1,12 +1,42 @@
 document.addEventListener('DOMContentLoaded', function () {
-    var links = document.getElementsByTagName("a");
-    for (var i = 0; i < links.length; i++) {
-        (function () {
-            var ln = links[i];
-            var location = ln.href;
-            ln.onclick = function () {
-                chrome.tabs.create({active: true, url: location});
-            };
-        })();
+
+    function updateAuthUI() {
+        $(".loggedIn").css("display", "block");
+        $(".loggedOut").css("display", "none");
     }
+    
+    function updateDeAuthUI() {
+        $(".loggedIn").css("display", "none");
+        $(".loggedOut").css("display", "block");
+    }
+
+    chrome.storage.local.get("authenticated", function(obj) {
+        console.log(obj);
+    
+        if (obj.authenticated) {
+            updateAuthUI();
+        }
+    });
+    
+    chrome.runtime.onMessage.addListener(
+        function (request, sender, sendResponse) {
+            if (request.updateAuthUI == "updateAuthUI") {
+                updateAuthUI();
+            }
+        }
+    );
+    
+    // Event listeners for extension's main UI
+    $("#login").on("click", function() {
+        chrome.runtime.sendMessage({authorise: "Authorise"});
+    });
+    
+    $("#showSavedWords").on("click", function() {
+        chrome.tabs.create({url: "https://quizlet.com"});
+    });
+    
+    $("#logout").on("click", function() {
+        chrome.storage.local.set({"authenticated" : false});
+        updateDeAuthUI();
+    });
 });

@@ -16,6 +16,14 @@
 		    background-color: #f1f1f1;
 		}
 
+        .loggedIn {
+            display: none;
+        }
+        
+        .loggedOut {
+            display: block;
+        }
+        
 		li a {
 		    display: block;
 		    color: #000;
@@ -29,13 +37,14 @@
 		    color: white;
 		}
     </style>
+    <script type="text/javascript" src="jquery-3.2.1.min.js"></script>
 	<script type="text/javascript" src="popup.js"></script>
   </head>
   <body>
   	<ul>
-      <li class="loggedOut"><a>Login on Quizlet</a></li>
-      <li class="loggedIn"><a>My Saved Words</a></li>
-      <li class="loggedIn"><a>Log Out</a></li>
+      <li class="loggedOut"><a id="login" href="#">Login on Quizlet</a></li>
+      <li class="loggedIn"><a id="showSavedWords" href="#">My Saved Words</a></li>
+      <li class="loggedIn"><a id="logout" href="#">Log Out</a></li>
     </ul>
   </body>
 </html>
