@@ -121,7 +121,7 @@ function saveDefinition(word, definition, set_id, access_token) {
 function addToQuizlet(word, definition) {
     chrome.storage.local.get("authenticated", function(obj) {
         if (!obj.authenticated) {
-            // authenticate then save
+            authenticate();
         } else {
             // save the word and definition
             user = {};
@@ -147,53 +147,57 @@ chrome.runtime.onMessage.addListener(
     }
 );
 
+function authenticate() {
+    chrome.identity.launchWebAuthFlow(
+        {'url': 'https://quizlet.com/authorize?client_id=xabUE2TbhW&response_type=code&scope=read%20write_set&state=AreYouSerious',
+        'interactive': true},
+        function(redirect_url) {
+            error = findGetParameter("error", redirect_url);
+            if (error == null) {
+                console.log("User allowed");
+                state = findGetParameter("state", redirect_url);
+                if (state != "AreYouSerious") {
+                    console.log("Possible CSRF attack, state recieved is different");
+                } else {
+                    code = findGetParameter("code", redirect_url);
+                    $.ajax({
+                        method: "POST",
+                        url: "https://api.quizlet.com/oauth/token",
+                        data: {
+                            "grant_type":    "authorization_code",
+                            "code":          code,
+                            "redirect_uri":  "https://haddmjhkgepkcficbheckaomffmkcjfg.chromiumapp.org/quizlet",
+                        },
+                        beforeSend: function (xhr) {
+                            xhr.setRequestHeader ("Authorization", "Basic eGFiVUUyVGJoVzphYThVWGtlWGZrRXFERTl3dmU0c2dQ");
+                        },
+                        success: function(response) {
+                            if (!response.error) {
+                                access_token = response.access_token;
+                                user_id = response.user_id;
+                                chrome.storage.local.set({"authenticated" : true});
+                                chrome.storage.local.set({"access_token" : access_token});
+                                chrome.storage.local.set({"user_id" : user_id});
+                                setSetId(user_id, access_token);
+                                chrome.runtime.sendMessage({updateAuthUI : "updateAuthUI"});
+                            } else {
+                                console.log(response.error_description)
+                            }
+                        },
+                    });
+                }
+            } else {
+                console.log(error);
+            }
+        }
+    );
+}
+
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
         if( request.authorise == "Authorise" )
         {
-            chrome.identity.launchWebAuthFlow(
-                {'url': 'https://quizlet.com/authorize?client_id=xabUE2TbhW&response_type=code&scope=read%20write_set&state=AreYouSerious',
-                'interactive': true},
-                function(redirect_url) {
-                    error = findGetParameter("error", redirect_url);
-                    if (error == null) {
-                        console.log("User allowed");
-                        state = findGetParameter("state", redirect_url);
-                        if (state != "AreYouSerious") {
-                            console.log("Possible CSRF attack, state recieved is different");
-                        } else {
-                            code = findGetParameter("code", redirect_url);
-                            $.ajax({
-                                method: "POST",
-                                url: "https://api.quizlet.com/oauth/token",
-                                data: {
-                                    "grant_type":    "authorization_code",
-                                    "code":          code,
-                                    "redirect_uri":  "https://haddmjhkgepkcficbheckaomffmkcjfg.chromiumapp.org/quizlet",
-                                },
-                                beforeSend: function (xhr) {
-                                    xhr.setRequestHeader ("Authorization", "Basic eGFiVUUyVGJoVzphYThVWGtlWGZrRXFERTl3dmU0c2dQ");
-                                },
-                                success: function(response) {
-                                    if (!response.error) {
-                                        access_token = response.access_token;
-                                        user_id = response.user_id;
-                                        chrome.storage.local.set({"authenticated" : true});
-                                        chrome.storage.local.set({"access_token" : access_token});
-                                        chrome.storage.local.set({"user_id" : user_id});
-                                        setSetId(user_id, access_token);
-                                        chrome.runtime.sendMessage({updateAuthUI : "updateAuthUI"});
-                                    } else {
-                                        console.log(response.error_description)
-                                    }
-                                },
-                            });
-                        }
-                    } else {
-                        console.log(error);
-                    }
-                }
-            ); 
+            authenticate();
         }
     }
 );
