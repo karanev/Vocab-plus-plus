@@ -37,6 +37,9 @@ document.addEventListener('DOMContentLoaded', function () {
     
     $("#logout").on("click", function() {
         chrome.storage.local.set({"authenticated" : false});
+        chrome.storage.local.set({"access_token" : ""});
+        chrome.storage.local.set({"user_id" : ""});
+        chrome.storage.local.set({"set_id" : -1});
         updateDeAuthUI();
     });
 });

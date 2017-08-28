@@ -3,25 +3,30 @@ vex.dialog.buttons.YES.text = 'SAVE';
 
 chrome.runtime.onMessage.addListener(
   function(request, sender, sendResponse) {
-    console.log(request.word + ": " + request.def);
+    wordSelected = request.word;
+    definitionArray = request.def;
+    definitionToShow = "<ul>";
+    for (var i = 0; i < definitionArray.length; i++) {
+      definitionToShow += "<li>" + definitionArray[i] + "</li>";
+    }
+    definitionToShow += "</ul>";
+    // Remove html tags from top definition before saving
+    definitionArray[0].replace(/(<([^>]+)>)/ig, '');
     vex.dialog.confirm({
-      unsafeMessage: "<b>" + request.word + ":</b>" + "<br>" + request.def,
+      unsafeMessage: "<b>" + wordSelected + ":</b>" + "<br>" + definitionToShow,
       callback: function (value) {
           if (value) {
-              word = request.word;
-              definition = request.def;
-              date = new Date();
-              time = date.getTime();
-              var obj = {};
-              obj[word] = [definition, time];
-              chrome.storage.sync.set(obj, function() {
-              	console.log("Saved");
+              chrome.runtime.sendMessage({
+                saveDefinition : "SaveDefinition",
+                word : wordSelected,
+                // Only the top definition is saved
+                definition : definitionArray[0]
               });
           } else {
               console.log('Cancel')
           }
       }
-	  });
+	});
     /*if (request.type == "defintion")
       sendResponse({type: "definition"});*/
 });
