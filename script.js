@@ -25,7 +25,7 @@ function defineWord(info, tab) {
   console.log("Word " + info.selectionText + " was selected.");
   getDefinitions (info.selectionText, function (definitionArray) {
     chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-      chrome.tabs.sendMessage(tabs[0].id, {type:"definition", word:info.selectionText, def:definitionArray}/*, function(response) {
+      chrome.tabs.sendMessage(tabs[0].id, {type:"ShowDefinition", word:info.selectionText, def:definitionArray}/*, function(response) {
         if(response.type == "definition"){
           console.log('definiton received');
         }
@@ -67,6 +67,11 @@ function createSet(access_token) {
         beforeSend: function (xhr) {
             xhr.setRequestHeader ("Authorization", "Bearer " + access_token);
         },
+        error: function(response) {
+            chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+                chrome.tabs.sendMessage(tabs[0].id, {type:"Message", message: response.error_description});
+            });
+        },
         success: function(response) {
             console.log(response.id);
             return response.id;
@@ -96,6 +101,11 @@ function setSetId(user_id, access_token) {
             console.log(user.setId);
             chrome.storage.local.set({"set_id" : user.setId});
         },
+        error: function(response) {
+            chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+                chrome.tabs.sendMessage(tabs[0].id, {type:"Message", message: response.error_description});
+            });
+        }
     });
 }
 
@@ -115,13 +125,21 @@ function saveDefinition(word, definition, set_id, access_token) {
         success: function(response) {
             console.log(response);
         },
+        error: function(response) {
+            chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+                chrome.tabs.sendMessage(tabs[0].id, {type:"Message", message: response.error_description});
+            });
+        }
     });
 }
 
 function addToQuizlet(word, definition) {
     chrome.storage.local.get("authenticated", function(obj) {
         if (!obj.authenticated) {
-            authenticate();
+            // Show the first login message
+            chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+                chrome.tabs.sendMessage(tabs[0].id, {type:"Message", message: "You need to login first"});
+            });
         } else {
             // save the word and definition
             user = {};
@@ -184,6 +202,11 @@ function authenticate() {
                                 console.log(response.error_description)
                             }
                         },
+                        error: function(response) {
+                            chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+                                chrome.tabs.sendMessage(tabs[0].id, {type:"Message", message: response.error_description});
+                            });
+                        }
                     });
                 }
             } else {
