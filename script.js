@@ -170,6 +170,10 @@ function authenticate() {
         {'url': 'https://quizlet.com/authorize?client_id=xabUE2TbhW&response_type=code&scope=read%20write_set&state=AreYouSerious',
         'interactive': true},
         function(redirect_url) {
+            // First time login doesn't redirect to allow or deny page
+            if (!redirect_url) {
+                authenticate();
+            }
             error = findGetParameter("error", redirect_url);
             if (error == null) {
                 console.log("User allowed");

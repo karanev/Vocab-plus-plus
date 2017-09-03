@@ -15,13 +15,23 @@ chrome.runtime.onMessage.addListener(
         vex.dialog.buttons.YES.text = 'SAVE';
         wordSelected = request.word;
         definitionArray = request.def;
+        if (definitionArray.length == 0) {
+            vex.dialog.buttons.YES.text = 'OK';
+            vex.dialog.alert("Sorry, unable to find definition. But, you can add the flashcard manually on https://quizlet.com");
+            return;
+        }
         definitionToShow = "<ul>";
         for (var i = 0; i < definitionArray.length; i++) {
           definitionToShow += "<li>" + definitionArray[i] + "</li>";
         }
         definitionToShow += "</ul>";
+        if (definitionArray[1]) {
+            definitionToSave = definitionArray[0] + "; " + definitionArray[1];
+        } else {
+            definitionToSave = definitionArray[0];
+        }
         // Remove html tags from top definition before saving
-        definitionArray[0].replace(/(<([^>]+)>)/ig, '');
+        definitionToSave.replace(/(<([^>]+)>)/ig, '');
         vex.dialog.confirm({
           unsafeMessage: "<b>" + wordSelected + ":</b>" + "<br>" + definitionToShow,
           callback: function (value) {
@@ -30,7 +40,7 @@ chrome.runtime.onMessage.addListener(
                     saveDefinition : "SaveDefinition",
                     word : wordSelected,
                     // Only the top definition is saved
-                    definition : definitionArray[0]
+                    definition : definitionToSave
                   });
               } else {
                   console.log('Cancel')
